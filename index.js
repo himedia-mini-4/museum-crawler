@@ -84,12 +84,13 @@ async function fetchData(url, downloadImage = false) {
                 }
 
                 const $ = cheerio.load(detailResponse.data);
-                const el = $('#content > div > div.details > div.detailBody > div > div.bodySection.detailCont');
-                const description = el.find('div.contTextWrap > div').text();
-                const info = Object.fromEntries(el
-                    .find('div.box.type02.artInfo > ul > li > dl')
-                    .toArray()
-                    .map(element => [$(element.children[1]).text(), $(element.children[3]).text()])
+                const description = $(
+                    $('#content .contTextWrap .txtArea, #content .contTextWrap .txtArea p').toArray().reverse()[0]
+                ).text();
+                const info = Object.fromEntries(
+                    $('#content .artInfo dl')
+                        .toArray()
+                        .map(element => [$(element.children[1]).text(), $(element.children[3]).text()])
                 );
 
                 let category = info.부문.replaceAll('I', '').trim();
