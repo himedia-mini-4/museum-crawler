@@ -11,10 +11,11 @@ const sqlString = require('sqlstring');
 
 const DETAIL_URL = 'https://www.mmca.go.kr/collections/collectionsDetailPage.do?museumId=%museumId&wrkinfoSeqno=%wrkinfoSeqno&artistnm=%artistnm&wrkMngNo=%wrkMngNo';
 
-function escape(value) {
+function escape(value, length = 9999) {
     return sqlString.escape(value.trim())
         .replaceAll('×', 'x')
-        .replaceAll(';', ' ');
+        .replaceAll(';', ' ')
+        .substring(0, length);
 }
 
 const invalidChars = /[\\/:*?"<>|]/g;
@@ -103,12 +104,12 @@ async function fetchData(url) {
 
                 console.log(`'${name}' 예술품의 데이터를 성공적으로 가져왔습니다.`);
                 resolve('('
-                    + `${escape(name)},`
-                    + `${escape(category)},`
-                    + `${escape(artist)},`
-                    + `${escape(year)},`
-                    + `${escape(info.재료)},`
-                    + `${escape(info.규격)},`
+                    + `${escape(name, 45)},`
+                    + `${escape(category, 45)},`
+                    + `${escape(artist, 45)},`
+                    + `${escape(year, 4)},`
+                    + `${escape(info.재료, 45)},`
+                    + `${escape(info.규격, 45)},`
                     + `${escape(description)},`
                     + `${escape(imgFileName)},`
                     + `${escape(imgFileName)}`
@@ -127,7 +128,7 @@ const INSERT_PREFIX = 'INSERT INTO artwork (name, category, artist, year, materi
 const urlPrefix = 'https://www.mmca.go.kr/collections/AjaxCollectionsList.do?pageOrder=Wrkinfo_Seqno&pageIndex';
 
 const promises = [];
-for (let i = 1; i < 30; i++) {
+for (let i = 1; i <= 30; i++) {
     console.log(`페이지 ${i}의 데이터를 수집합니다.`);
     promises.push(fetchData(`${urlPrefix}=${i}`));
 }
