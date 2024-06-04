@@ -12,10 +12,11 @@ const sqlString = require('sqlstring');
 const DETAIL_URL = 'https://www.mmca.go.kr/collections/collectionsDetailPage.do?museumId=%museumId&wrkinfoSeqno=%wrkinfoSeqno&artistnm=%artistnm&wrkMngNo=%wrkMngNo';
 
 function escape(value, length = 9999) {
-    return sqlString.escape(value.trim())
+    return sqlString.escape(value
+        .trim()
         .replaceAll('×', 'x')
         .replaceAll(';', ' ')
-        .substring(0, length);
+        .substring(0, length));
 }
 
 const invalidChars = /[\\/:*?"<>|]/g;
