@@ -39,7 +39,7 @@ function sanitizeFileName(fileName) {
 
 const ARTWORK_CATEGORY = ['회화', '드로잉', '판화', '조각ㆍ설치', '사진', '공예', '디자인', '서예'];
 
-async function fetchData(url) {
+async function fetchData(url, downloadImage = false) {
     const pageResponse = await fetch(url);
 
     if (!pageResponse.ok) {
@@ -93,14 +93,19 @@ async function fetchData(url) {
                     throw new Error('Image file not found');
                 }
 
-                const imgFileName = sanitizeFileName(name + path.extname(imgFileUrl));
-                const imgFilePath = path.join(saveDir, imgFileName);
-                if (!fs.existsSync(imgFilePath)) {
-                    const imgResponse = await fetch(imgFileUrl);
-                    if (!imgResponse.ok) {
-                        throw new Error('Failed load image');
+                let imgFileName;
+                if (downloadImage) {
+                    imgFileName = sanitizeFileName(name + path.extname(imgFileUrl));
+                    const imgFilePath = path.join(saveDir, imgFileName);
+                    if (!fs.existsSync(imgFilePath)) {
+                        const imgResponse = await fetch(imgFileUrl);
+                        if (!imgResponse.ok) {
+                            throw new Error('Failed load image');
+                        }
+                        await promisify(pipeline)(imgResponse.body, fs.createWriteStream(imgFilePath));
                     }
-                    await promisify(pipeline)(imgResponse.body, fs.createWriteStream(imgFilePath));
+                } else {
+                    imgFileName = imgFileUrl;
                 }
 
                 console.log(`'${name}' 예술품의 데이터를 성공적으로 가져왔습니다.`);
@@ -112,8 +117,8 @@ async function fetchData(url) {
                     + `${escape(info.재료, 45)},`
                     + `${escape(info.규격, 45)},`
                     + `${escape(description)},`
-                    + `${escape(imgFileName)},`
-                    + `${escape(imgFileName)}`
+                    + `${escape(imgFileName, 100)},`
+                    + `${escape(imgFileName, 200)}`
                     + ')');
             } catch (e) {
                 console.error(`'${name}' 예술품의 데이터를 가져오는 중 오류가 발생했습니다. ${e.message}`);
