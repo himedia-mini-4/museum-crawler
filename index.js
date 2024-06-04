@@ -19,8 +19,6 @@ function escape(value, length = 9999) {
         .substring(0, length));
 }
 
-const invalidChars = /[\\/:*?"<>|]/g;
-
 function sanitizeFileName(fileName) {
     const reservedNames = [
         'AUX', 'CON', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
@@ -34,8 +32,7 @@ function sanitizeFileName(fileName) {
         baseName += '_';
     }
 
-    baseName = baseName.replace(invalidChars, '_');
-    baseName = baseName.replace(/:/g, '_');
+    baseName = baseName.replaceAll(/[\\/:*?#'"<>|]/g, '_')
 
     return baseName + ext;
 }
