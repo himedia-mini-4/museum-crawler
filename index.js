@@ -96,11 +96,14 @@ async function fetchData(url) {
                 }
 
                 const imgFileName = sanitizeFileName(name + path.extname(imgFileUrl));
-                const imgResponse = await fetch(imgFileUrl);
-                if (!imgResponse.ok) {
-                    throw new Error('Failed load image');
+                const imgFilePath = path.join(saveDir, imgFileName);
+                if (!fs.existsSync(imgFilePath)) {
+                    const imgResponse = await fetch(imgFileUrl);
+                    if (!imgResponse.ok) {
+                        throw new Error('Failed load image');
+                    }
+                    await promisify(pipeline)(imgResponse.body, fs.createWriteStream(imgFilePath));
                 }
-                await promisify(pipeline)(imgResponse.body, fs.createWriteStream(path.join(saveDir, imgFileName)));
 
                 console.log(`'${name}' 예술품의 데이터를 성공적으로 가져왔습니다.`);
                 resolve('('
