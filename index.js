@@ -9,7 +9,16 @@ const cheerio = require('cheerio');
 import('node-fetch');
 const sqlString = require('sqlstring');
 
-const DETAIL_URL = 'https://www.mmca.go.kr/collections/collectionsDetailPage.do?museumId=%museumId&wrkinfoSeqno=%wrkinfoSeqno&artistnm=%artistnm&wrkMngNo=%wrkMngNo';
+const LIST_URL = 'https://www.mmca.go.kr/collections/AjaxCollectionsList.do?'
+    + 'pageOrder=Wrkinfo_Seqno&'
+    + 'pageIndex=%pageIndex&'
+    + 'searchWrkFieldGb=%searchWrkFieldGb';
+const DETAIL_URL = 'https://www.mmca.go.kr/collections/collectionsDetailPage.do?'
+    + 'museumId=%museumId&'
+    + 'wrkinfoSeqno=%wrkinfoSeqno&'
+    + 'artistnm=%artistnm&'
+    + 'wrkMngNo=%wrkMngNo';
+const INSERT_PREFIX = 'INSERT INTO artwork (name, category, artist, year, material, size, content, image, savefilename)\nVALUES ';
 
 function escape(value, length = 9999) {
     return sqlString.escape(value
@@ -129,14 +138,29 @@ async function fetchData(url, downloadImage = false) {
     return (await Promise.all(promises)).filter(Boolean);
 }
 
-// 함수 호출 예시
-const INSERT_PREFIX = 'INSERT INTO artwork (name, category, artist, year, material, size, content, image, savefilename)\nVALUES ';
-const urlPrefix = 'https://www.mmca.go.kr/collections/AjaxCollectionsList.do?pageOrder=Wrkinfo_Seqno&pageIndex';
+// ['회화1', '회화2', '드로잉', '판화', '조각ㆍ설치', '사진', '공예', '디자인', '서예'];
+const CATEGORY_MAP = {
+    '회화1': 'WFDKO',
+    '회화2': 'WFDPA',
+    '드로잉': 'WFDDR',
+    '판화': 'WFDPR',
+    '조각ㆍ설치': 'WFDSC',
+    '사진': 'WFDPH',
+    '공예': 'WFDCR',
+    '디자인': 'WFDDE',
+    '서예': 'WFDCA'
+};
+const PAGE_PER_CATEGORY = 3;
 
 const promises = [];
-for (let i = 1; i <= 30; i++) {
-    console.log(`페이지 ${i}의 데이터를 수집합니다.`);
-    promises.push(fetchData(`${urlPrefix}=${i}`));
+for (const [category, code] of Object.entries(CATEGORY_MAP)) {
+    for (let i = 1; i <= PAGE_PER_CATEGORY; i++) {
+        console.log(`카테고리 '${category}'의 페이지 ${i}의 데이터를 수집합니다.`);
+        const url = LIST_URL
+            .replace('%pageIndex', i)
+            .replace('%searchWrkFieldGb', code);
+        promises.push(fetchData(url));
+    }
 }
 
 Promise.all(promises).then((results) => {
